@@ -1,0 +1,80 @@
+Serum.group;Color
+mRNA1273/mRNA1273;#5a5a5a
+BNT/BNT;#737373
+AZ/BNT;#8d8d8d
+AZ/AZ;#9a9a9a
+D614G conv.;#393b79
+alpha/alpha+E484K conv.;#637939
+delta conv.;#d18652
+beta conv.;#e7ba52
+BA.1 conv.;#EF3737
+BA.2 conv.;#5B004C
+Vacc+BA.1;#b57171
+Vacc+BA.2;#b85090
+BA.1 reinf.;#c91010
+BA.2 reinf.;#a10c7d
+Vacc+BA.1 reinf.;#f14f4f
+Vacc+BA.2 reinf.;#ef24be
+WT conv.;#393B79
+AZ/AZ+delta;#d69466
+BNT/BNT+delta;#a9602d
+1-NA-NA-NA-NA;#EF3737
+2-NA-NA-NA-NA;#393b79
+3-NA-NA-NA-NA;#d18652
+4-NA-NA-NA-NA;#637939
+NA-B+O-NA-NA-NA-NA-NA;#eb7844
+NA-B+O, B+O-NA-NA-NA-NA-NA;#e7ba52
+NA-P+O-NA-NA-NA-NA-NA;#943958
+NA-P-NA-NA-NA-NA-NA;#393b79
+NA-O-NA-NA-NA-NA-NA;#EF3737
+NA-D+O-NA-NA-NA-NA-NA;#d18652
+#B+O;#eb7844
+B+O, B+O;#e7ba52
+B+O;#e9994b
+P+O;#943958
+P;#393b79
+O;#EF3737
+D+O;#d18652
+B;#e7ba52
+P+B;#637939
+<65;#575757
+>65;#dcdcdc
+inf_old;#ff8fc7
+non_inf_old;#e9ffdb
+non_inf;#00a3e0
+inf;#ef3340
+1;#ab738f
+2;#a0ab99
+3;#eeb5d2
+4;#e3eedc
+V3;#dcdcdc
+B+O, B+O:M;#e7ba52
+B+O:M;#e9994b
+P+O:M;#943958
+P:M;#393b79
+O:M;#EF3737
+D+O:M;#d18652
+B+O:Pf;#e9994b
+P+O:Pf;#943958
+P:Pf;#393b79
+O:Pf;#EF3737
+B:Pf;#e7ba52
+P+B:Pf;#637939
+P:S;#393b79
+B:S;#e7ba52
+P+B:S;#637939
+M;#ef929d
+Pf;#393b79
+S;#8fce00
+D1;#6e6e6e
+D15;#c6c6c6
+D57;#c6c6c6
+D91;#dcdcdc
+D85;#dcdcdc
+D91 - D1;#dcdcdc
+D91 - D29;#6e6e6e
+D614G;#393b79
+BA.1;#EF3737
+Delta;#d18652
+Beta;#e7ba52
+BA.4/BA.5;#f25b5b

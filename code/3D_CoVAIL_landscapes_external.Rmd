@@ -1,0 +1,503 @@
+---
+title: "3D CoVAIL Landscapes"
+author: "Antonia Netzl"
+date: "2022-12-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+## Base Map
+The map by the Duke lab (November 2022) was used as base map. Antibody landscapes were fit to D1 and D91 titers.
+ 
+```{r}
+setwd("~/Documents/smith/labbook/Branche_et_al2023/")
+library(Racmacs)
+library(tidyverse)
+library(r3js)
+library(ablandscapes)
+library(htmlwidgets)
+
+source(file.path("functions", "format_data.R"))
+source(file.path("functions", "landscape_functions.R"))
+source(file.path("functions", "landscape_functions.R"))
+
+set.seed(100)
+# set optimization nr to fit BA.4/5 position; optimization nr 56 gives upper BA.4/5
+
+map <- read.acmap(file.path("data", "maps", "map_ndsubset_no_outliers_slope_adjusted.ace"))
+map <- realignMap(map, map)
+map <- keepSingleOptimization(map, optimization_number = 1)
+agShown(map)[agNames(map) %in% c("BA.1.1", "BA.1+A484K","BA.3")] <- FALSE
+lims <- Racmacs:::mapPlotLims(map, sera = FALSE)
+```
+
+```{r}
+#srOutline(map) <- 1
+
+#Racmacs::plot(map, xlim = lims$xlim, ylim = lims$ylim)
+```
+
+
+## Landscapes of non infected
+
+```{r}
+lims$xlim[2] <- lims$xlim[2]
+lims$ylim[1] <- lims$ylim[1]
+setwd("~/Documents/smith/labbook/Branche_et_al2023/")
+
+exclude_2dose <- TRUE
+
+
+date <- "14DEC2022"
+day <- "91"
+
+#date <- "19SEP2022"
+# day <- "29"
+inf_names <- c(non_inf = "non_inf")
+#set day, visit numbers
+day_visno <- c("D1", "D91")
+
+BO_D_ajudstment <- c("wo_2dose")
+
+only_gmt_landscapes <- FALSE
+
+# set optimization nr to fit BA.4/5 position; optimization nr 56 gives upper BA.4/5
+opti_nr <- 1
+
+ag_plot_names <- c("D614G" = "D614G", "B.1.617.2" = "Delta", "B.1.351" = "Beta", "BA.1" = "BA.1", "BA.4/BA.5" = "BA.4/BA.5")
+
+
+sr_group_code <- read.csv("./data/metadata/sr_group_code.csv", sep = ";")
+sr_group_colors <- read.csv("./data/metadata/sr_group_colors_emmes.csv", sep = ";", row.names = "Serum.group")
+
+#titers_adjusted <- readr::read_csv("./data/titer_data/monogram_titrations_w_montefiori_ba45_ba2121_adjusted.csv")
+# read the data
+if(date == "29JUN2022"){
+  data <- read.csv(file.path("data","titer_data", date, "COVAIL_Landscape_data_Moderna_D15.csv"), sep= ",")
+  plot_antigens <- c("D614G", "B.1.617.2", "B.1.351", "BA.1")
+  
+  arm_code_order_no_vacc <- c("P", "P+O", "D+O", "O", "B+O", "B+O, B+O")
+  
+} else if(date %in% c("19SEP2022", "14DEC2022")) {
+  
+  data <- read.csv(file.path("data","titer_data", date, paste0("COVAIL_Landscape_data_Monogram_Moderna_D", day,".csv")), sep= ",") %>%
+    plyr::rbind.fill(read.csv(file.path("data","titer_data", date, paste0("COVAIL_Landscape_data_Monogram_Pfizer_D", day,".csv")), sep= ",")) %>%
+    plyr::rbind.fill(read.csv(file.path("data","titer_data", date, paste0("COVAIL_Landscape_data_Monogram_Sanofi_D", day,".csv")), sep= ",")) 
+  
+  plot_antigens <- c("D614G", "B.1.617.2", "B.1.351", "BA.1", "BA.4/5")
+
+  arm_code_order_no_vacc <- c("P","O","P+O", "D+O","B+O", "B+O, B+O", "P+B", "B")
+} else {
+  data <- read.csv(file.path("data","titer_data", date, paste0("COVAIL_Landscape_data_Monogram_Moderna_D", day,".csv")), sep= ",")
+  plot_antigens <- c("D614G", "B.1.617.2", "B.1.351", "BA.1", "BA.4/5")
+  
+  arm_code_order_no_vacc <- c("P","O","P+O", "D+O","B+O", "B+O, B+O")
+}
+
+data <- format_data(data, sr_group_code, combine_b_o_arm = FALSE, remove_all_bfl = FALSE, remove_all_subj_entries = FALSE)
+# format the data
+
+
+if(exclude_2dose){
+  arm_code_order_no_vacc <- arm_code_order_no_vacc[arm_code_order_no_vacc != "B+O, B+O"]
+  data <- data %>%
+    filter(arm_code != "B+O, B+O:M")
+}
+
+data_b <- data
+for(d_adj in BO_D_ajudstment){
+  
+  # now drop B+O, B+O arm day 29 make copy of B+O arm day 
+  data <- BO_format_visit_code(data_b, d_adj)
+  
+  # filter out non responders
+  non_responders <- non_responders <- data %>% filter(D614G == 20) %>% filter(B.1.617.2 == 20) %>%
+    filter(BA.1 == 20) %>% filter(B.1.351 == 20) %>% pull(subjid)
+  
+  data <- data %>% filter(!(subjid %in% non_responders))
+  warning(paste0(length(unique(non_responders)), " subjects were filtered out because they were non responders"))
+  
+  # now combine v1, v3 but group by arm and infection
+  sr_group_data <- group_data_sr_group(data, by_arm = T, by_visit = T, by_infection = T, by_age = F) %>%
+    arm_code_wo_vacc()
+  
+  if(only_gmt_landscapes & d_adj %in% c("D57D85")){
+    sr_group_data <- sr_group_data %>%
+      filter(!(arm_code == "B+O, B+O" & visit_code == "D1"))
+  }
+  
+  # Highlight certain antigens
+  highlighted_ags <- c(plot_antigens, "BA.4/BA.5(2)")
+  highlighted_ags <- gsub("BA.4/5", "BA.4/BA.5", highlighted_ags)
+  
+  arm_cols <- sr_group_colors[unique(sr_group_data$arm_code), "Color"]
+  names(arm_cols) <- unique(sr_group_data$arm_code)
+  
+  sr_group_data_b <- sr_group_data
+  
+  for(inf_stat in inf_names){
+    
+    figure_dir <- file.path("figures",date,inf_stat, "landscapes", paste0(d_adj,"_b+o_adj"), paste("optimization_", opti_nr))
+    suppressWarnings(dir.create(figure_dir, recursive = T))
+    
+    
+    
+    sr_group_data <- sr_group_data_b %>% 
+      filter(inf_code == inf_stat)
+    
+    titers_adjusted <- sr_group_data
+    colnames(titers_adjusted) <- gsub("BA.4/5", "BA.4/BA.5", colnames(titers_adjusted))
+    titers_adjusted["BA.4/BA.5(2)"] <- titers_adjusted[,"BA.4/BA.5"]
+    
+    titerdata <- titers_adjusted
+    titerdata %>%
+      pivot_longer(
+        cols = highlighted_ags,
+        names_to = "variant",
+        values_to = "titer"
+      ) -> titerdata
+    
+    titerdata %>%
+      group_by(
+        arm_code,
+        visit_code,
+        v_manuf_code
+      ) -> titerdata
+  
+    #titerdata <- titerdata %>% filter(!(variant %in% c("BA.4/BA.5", "BA.4/BA.5(2)")))
+    titerdata %>%
+      group_map(
+        get_titertable
+      ) -> titertables
+    
+    
+    lndscp_fits <- lapply(
+      titertables,
+      function(titertable) {
+        
+        ablandscape.fit(
+          titers = titertable[,c("BA.4/BA.5", "BA.1", "B.1.617.2", "B.1.351", "D614G"), drop = FALSE],
+          # titers = titertable[,c("BA.1", "D614G"), drop = FALSE],
+          bandwidth = 1,
+          degree = 1,
+          method = "cone",
+          error.sd = 1,
+          acmap = map,
+          control = list(
+            optimise.cone.slope = TRUE
+          )
+        )
+        
+      }
+    )
+    
+    titertables_groups <- group_data(titerdata)
+    
+    # Add impulses
+    titerdata %>%
+      group_by(
+        visit_code,
+        arm_code,
+        v_manuf_code,
+        variant
+      ) %>%
+      summarize(gmt =meantiter::mean_titers(titer, method ="bayesian", dilution_stepsize = 0)$mean)-> gmt_data
+    
+    
+    # Add landscapes
+    
+    # plot here day comparison landscapes by arm
+    angle <- list(
+      rotation = c(-1.4907, -0.0089, -0.1502),
+      translation = c(0, 0,0), #translation = c(0.0344, 0.0459, 0.1175),
+      zoom = 1.6
+      # zoom = 1.1646 # higher is more zoomed out
+    )
+    
+    
+    lndscp_list <- list()
+    for(v_manuf in unique(titertables_groups$v_manuf_code)){
+      
+      for(v1 in day_visno){
+        
+        if(v1 != last(day_visno)){
+          
+          for(v2 in day_visno[c((grep("TRUE", v1 == day_visno)+1):length(day_visno))]) {
+            # get matching lndscp_fits
+            visit_rows <- c(grep("TRUE", v1 == titertables_groups$visit_code), grep("TRUE", v2 == titertables_groups$visit_code))
+            manuf_rows <- grep(v_manuf, titertables_groups$v_manuf_code)
+            
+            #remove B+O, B+O D1 landscape
+            
+            lndscp_fits_t <- lndscp_fits[intersect(manuf_rows, visit_rows)]
+            titertables_groups_t <- titertables_groups[intersect(manuf_rows, visit_rows),]
+            
+            
+            data3js <- base_plot_data3js(map, lndscp_fits, highlighted_ags, lims, ag_plot_names)
+  
+            lndscp_3js <- plot_landscapes_from_list(data3js, titertables_groups_t, lndscp_fits_t, map, gmt_data, highlighted_ags, ag_plot_names, hide_buttons = FALSE)
+            
+            lndscp <-r3js(
+              lndscp_3js,
+              rotation = angle$rotation,
+              zoom = angle$zoom
+            )
+            lndscp_list[[paste(v_manuf, v1, v2, sep = "-")]] <- lndscp
+          }
+          
+          
+        }
+        
+      }
+      
+    }
+    
+  }
+}
+```
+
+## Day 1 and Day 91
+### Moderna 
+```{r, echo=FALSE}
+lndscp_list$`M-D1-D91`
+```
+### Pfizer
+```{r, echo=FALSE}
+lndscp_list$`Pf-D1-D91`
+```
+### Sanofi
+```{r, echo=FALSE}
+lndscp_list$`S-D1-D91`
+```
+
+
+## Landscapes of previously infected
+
+```{r}
+setwd("~/Documents/smith/labbook/Branche_et_al2023/")
+
+exclude_2dose <- TRUE
+
+
+date <- "14DEC2022"
+day <- "91"
+
+#date <- "19SEP2022"
+# day <- "29"
+inf_names <- c(inf = "inf")
+BO_D_ajudstment <- c("D29")
+#set day, visit numbers
+day_visno <- c("D1", "D91")
+
+BO_D_ajudstment <- c("wo_2dose")
+
+only_gmt_landscapes <- FALSE
+
+# set optimization nr to fit BA.4/5 position; optimization nr 56 gives upper BA.4/5
+opti_nr <- 1
+
+#titers_adjusted <- readr::read_csv("./data/titer_data/monogram_titrations_w_montefiori_ba45_ba2121_adjusted.csv")
+# read the data
+if(date == "29JUN2022"){
+  data <- read.csv(file.path("data","titer_data", date, "COVAIL_Landscape_data_Moderna_D15.csv"), sep= ",")
+  plot_antigens <- c("D614G", "B.1.617.2", "B.1.351", "BA.1")
+  
+  arm_code_order_no_vacc <- c("P", "P+O", "D+O", "O", "B+O", "B+O, B+O")
+  
+} else if(date %in% c("19SEP2022", "14DEC2022")) {
+  
+  data <- read.csv(file.path("data","titer_data", date, paste0("COVAIL_Landscape_data_Monogram_Moderna_D", day,".csv")), sep= ",") %>%
+    plyr::rbind.fill(read.csv(file.path("data","titer_data", date, paste0("COVAIL_Landscape_data_Monogram_Pfizer_D", day,".csv")), sep= ",")) %>%
+    plyr::rbind.fill(read.csv(file.path("data","titer_data", date, paste0("COVAIL_Landscape_data_Monogram_Sanofi_D", day,".csv")), sep= ",")) 
+  
+  plot_antigens <- c("D614G", "B.1.617.2", "B.1.351", "BA.1", "BA.4/5")
+
+  arm_code_order_no_vacc <- c("P","O","P+O", "D+O","B+O", "B+O, B+O", "P+B", "B")
+} else {
+  data <- read.csv(file.path("data","titer_data", date, paste0("COVAIL_Landscape_data_Monogram_Moderna_D", day,".csv")), sep= ",")
+  plot_antigens <- c("D614G", "B.1.617.2", "B.1.351", "BA.1", "BA.4/5")
+  
+  arm_code_order_no_vacc <- c("P","O","P+O", "D+O","B+O", "B+O, B+O")
+}
+
+
+# format the data
+data <- format_data(data, sr_group_code, combine_b_o_arm = FALSE, remove_all_bfl = FALSE, remove_all_subj_entries = FALSE)
+
+if(exclude_2dose){
+  arm_code_order_no_vacc <- arm_code_order_no_vacc[arm_code_order_no_vacc != "B+O, B+O"]
+  data <- data %>%
+    filter(arm_code != "B+O, B+O:M")
+}
+
+data_b <- data
+for(d_adj in BO_D_ajudstment){
+  
+  # now drop B+O, B+O arm day 29 make copy of B+O arm day 
+  data <- BO_format_visit_code(data_b, d_adj)
+  
+  # filter out non responders
+  non_responders <- non_responders <- data %>% filter(D614G == 20) %>% filter(B.1.617.2 == 20) %>%
+    filter(BA.1 == 20) %>% filter(B.1.351 == 20) %>% pull(subjid)
+  
+  data <- data %>% filter(!(subjid %in% non_responders))
+  warning(paste0(length(unique(non_responders)), " subjects were filtered out because they were non responders"))
+  
+  # now combine v1, v3 but group by arm and infection
+  sr_group_data <- group_data_sr_group(data, by_arm = T, by_visit = T, by_infection = T, by_age = F) %>%
+    arm_code_wo_vacc()
+  
+  if(only_gmt_landscapes & d_adj %in% c("D57D85")){
+    sr_group_data <- sr_group_data %>%
+      filter(!(arm_code == "B+O, B+O" & visit_code == "D1"))
+  }
+  
+  # Highlight certain antigens
+  highlighted_ags <- c(plot_antigens, "BA.4/BA.5(2)")
+  highlighted_ags <- gsub("BA.4/5", "BA.4/BA.5", highlighted_ags)
+  
+  arm_cols <- sr_group_colors[unique(sr_group_data$arm_code), "Color"]
+  names(arm_cols) <- unique(sr_group_data$arm_code)
+  
+  sr_group_data_b <- sr_group_data
+  
+  for(inf_stat in inf_names){
+    
+    figure_dir <- file.path("figures",date,inf_stat, "landscapes", paste0(d_adj,"_b+o_adj"), paste("optimization_", opti_nr))
+    suppressWarnings(dir.create(figure_dir, recursive = T))
+    
+    
+    
+    sr_group_data <- sr_group_data_b %>% 
+      filter(inf_code == inf_stat)
+    
+    titers_adjusted <- sr_group_data
+    colnames(titers_adjusted) <- gsub("BA.4/5", "BA.4/BA.5", colnames(titers_adjusted))
+    titers_adjusted["BA.4/BA.5(2)"] <- titers_adjusted[,"BA.4/BA.5"]
+    
+    titerdata <- titers_adjusted
+    titerdata %>%
+      pivot_longer(
+        cols = highlighted_ags,
+        names_to = "variant",
+        values_to = "titer"
+      ) -> titerdata
+    
+    titerdata %>%
+      group_by(
+        arm_code,
+        visit_code,
+        v_manuf_code
+      ) -> titerdata
+    
+    #titerdata <- titerdata %>% filter(!(variant %in% c("BA.4/BA.5", "BA.4/BA.5(2)")))
+    titerdata %>%
+      group_map(
+        get_titertable
+      ) -> titertables
+    
+    
+    lndscp_fits <- lapply(
+      titertables,
+      function(titertable) {
+        
+        ablandscape.fit(
+          titers = titertable[,c("BA.4/BA.5", "BA.1", "B.1.617.2", "B.1.351", "D614G"), drop = FALSE],
+          # titers = titertable[,c("BA.1", "D614G"), drop = FALSE],
+          bandwidth = 1,
+          degree = 1,
+          method = "cone",
+          error.sd = 1,
+          acmap = map,
+          control = list(
+            optimise.cone.slope = TRUE
+          )
+        )
+        
+      }
+    )
+    
+    titertables_groups <- group_data(titerdata)
+    
+    # Add impulses
+    titerdata %>%
+      group_by(
+        visit_code,
+        arm_code,
+        v_manuf_code,
+        variant
+      ) %>%
+      summarize(gmt =meantiter::mean_titers(titer, method ="bayesian", dilution_stepsize = 0)$mean)-> gmt_data
+    
+    
+    # Add landscapes
+    
+    # plot here day comparison landscapes by arm
+    angle <- list(
+      rotation = c(-1.4907, -0.0089, -0.1502),
+      translation = c(0, 0,0), #translation = c(0.0344, 0.0459, 0.1175),
+      zoom = 1.6
+      # zoom = 1.1646 # higher is more zoomed out
+    )
+    
+    
+    lndscp_list <- list()
+    for(v_manuf in unique(titertables_groups$v_manuf_code)){
+      
+      for(v1 in day_visno){
+        
+        if(v1 != last(day_visno)){
+          
+          for(v2 in day_visno[c((grep("TRUE", v1 == day_visno)+1):length(day_visno))]) {
+            # get matching lndscp_fits
+            visit_rows <- c(grep("TRUE", v1 == titertables_groups$visit_code), grep("TRUE", v2 == titertables_groups$visit_code))
+            manuf_rows <- grep(v_manuf, titertables_groups$v_manuf_code)
+            
+            #remove B+O, B+O D1 landscape
+            
+            lndscp_fits_t <- lndscp_fits[intersect(manuf_rows, visit_rows)]
+            titertables_groups_t <- titertables_groups[intersect(manuf_rows, visit_rows),]
+            
+            
+            data3js <- base_plot_data3js(map, lndscp_fits, highlighted_ags, lims, ag_plot_names)
+  
+            lndscp_3js <- plot_landscapes_from_list(data3js, titertables_groups_t, lndscp_fits_t, map, gmt_data, highlighted_ags, ag_plot_names, hide_buttons = FALSE)
+            
+            lndscp <-r3js(
+              lndscp_3js,
+              rotation = angle$rotation,
+              zoom = angle$zoom
+            )
+            lndscp_list[[paste(v_manuf, v1, v2, sep = "-")]] <- lndscp
+          }
+          
+          
+        }
+        
+      }
+      
+    }
+    
+  }
+}
+
+```
+
+## Day 1 and Day 91
+### Moderna 
+```{r, echo=FALSE}
+lndscp_list$`M-D1-D91`
+```
+### Pfizer
+```{r, echo=FALSE}
+lndscp_list$`Pf-D1-D91`
+```
+### Sanofi
+```{r, echo=FALSE}
+lndscp_list$`S-D1-D91`
+```
+
+
