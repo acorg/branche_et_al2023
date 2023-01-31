@@ -1,7 +1,7 @@
 # branche_et_al2023
 This repository contains the code to construct antibody landscapes for the CoVAIL clinical trial.
 
-3D antibody landscapes can be found in code/#D_CoVAIL_landscapes_external.html
+3D antibody landscapes can be found in code/3D_CoVAIL_landscapes_external.html
 
 If you use code or data from this repository, please cite the main publication and this repository.
 
