@@ -105,7 +105,7 @@ for(d_adj in BO_D_ajudstment){
   data <- BO_format_visit_code(data_b, d_adj)
   
 # filter out non responders
-non_responders <- non_responders <- data %>% filter(visit_code %in% c("D1", "D91")) %>%
+non_responders <- data %>% filter(visit_code %in% c("D1", "D91")) %>%
   filter(D614G == 20) %>% filter(B.1.617.2 == 20) %>%
   filter(BA.1 == 20) %>% filter(B.1.351 == 20) %>% filter(`BA.4/5` == 20) %>% pull(subjid)
 
