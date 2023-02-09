@@ -27,8 +27,14 @@ scale_x_titer <- function(
   
 }
 
+scientific_10 <- function(x) {
+  #parse(text=gsub("e", " %*% 10^", scales::scientific_format()(x)))
+  expression(paste("10"^x))
+}
+
 scale_y_titer <- function(
     threshold = "<20",
+    log10scale = TRUE,
     logthreshold = 0,
     axisname = "Titer",
     ymin = NULL,
@@ -36,7 +42,8 @@ scale_y_titer <- function(
     ...
 ) {
   
-  scale_y_continuous(
+  if(!log10scale){
+     scale_y_continuous(
     name = axisname,
     breaks = function(x) {
       if (is.null(ymin)) ymin <- ceiling(min(x))
@@ -51,6 +58,20 @@ scale_y_titer <- function(
     minor_breaks = NULL,
     ...
   )
+  } else {
+     scale_y_continuous(
+    name = axisname,
+    breaks = c(logthreshold, 1:4),
+    labels = function(x) {
+      output <- parse(text = paste0("10^",x+1))
+      output[x == logthreshold] <- threshold
+      output
+    },
+    minor_breaks = NULL,
+    ...
+  )
+  }
+ 
   
 }
 

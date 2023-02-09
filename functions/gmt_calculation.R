@@ -1,6 +1,18 @@
 
+convert_gmt_to_log10 <- function(plotdata){
+
+  plotdata %>%
+        mutate(
+          logtiter = log10(titer/10),
+          lower = log10((2^lower*10)/10),
+          upper =log10((2^upper*10/10)),
+        ) -> plotdata
+
+  return(plotdata)
+}
+
 sr_group_gmt_calc <- function(plotdata, thresh, half_thresh = FALSE, cols_to_keep = c(),
-  pre_adj = FALSE) {
+  pre_adj = FALSE, log10scale = TRUE) {
   plotdata$below_thresh <- plotdata$titer == paste0("<",thresh)
  
   cols_to_keep <- c("sr_group","count", "ag_name", "logtiter", "lower", "upper", "titer", "all_below_thresh", cols_to_keep)
@@ -54,7 +66,7 @@ sr_group_gmt_calc <- function(plotdata, thresh, half_thresh = FALSE, cols_to_kee
       
       sr_group_gmt_plotdata$logtiter <- unlist(lapply(1:nrow(sr_group_gmt_plotdata), function(x) {
         if(sr_group_gmt_plotdata$all_below_thresh[x]) {
-          log2(thresh/10/2)
+          ifelse(log10scale, log10(thresh/20),log2(thresh/10/2))
         } else {
           sr_group_gmt_plotdata$logtiter[x]
         }
@@ -97,6 +109,10 @@ sr_group_gmt_calc <- function(plotdata, thresh, half_thresh = FALSE, cols_to_kee
   sr_group_gmt_plotdata <- sr_group_gmt_plotdata %>%
     select(all_of(cols_to_keep)) %>%
     unique()
+
+  if(log10scale){
+    sr_group_gmt_plotdata <- convert_gmt_to_log10(sr_group_gmt_plotdata)
+  }
   
   return(sr_group_gmt_plotdata)
 }

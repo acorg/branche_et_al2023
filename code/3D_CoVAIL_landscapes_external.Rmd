@@ -211,7 +211,7 @@ for(d_adj in BO_D_ajudstment){
     
     # plot here day comparison landscapes by arm
     angle <- list(
-      rotation = c(-1.4907, -0.0089, -0.1502),
+      rotation = c(-1.5335, -0.0093, -0.171),
       translation = c(0, 0,0), #translation = c(0.0344, 0.0459, 0.1175),
       zoom = 1.6
       # zoom = 1.1646 # higher is more zoomed out
@@ -437,7 +437,7 @@ for(d_adj in BO_D_ajudstment){
     
     # plot here day comparison landscapes by arm
     angle <- list(
-      rotation = c(-1.4907, -0.0089, -0.1502),
+      rotation = c(-1.5335, -0.0093, -0.171),
       translation = c(0, 0,0), #translation = c(0.0344, 0.0459, 0.1175),
       zoom = 1.6
       # zoom = 1.1646 # higher is more zoomed out

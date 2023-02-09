@@ -1,5 +1,15 @@
 padding <- 0.25
 
+convert_landscape_to_log10 <- function(lndsc_fit){
+
+  lndsc_fit$fitted.values <- log10((2^lndsc_fit$fitted.values))
+  lndsc_fit$cone$cone_heights <- log10((2^lndsc_fit$cone$cone_heights))
+  lndsc_fit$cone$cone$cone_slope <- log10((2^lndsc_fit$cone$cone$cone_slope))
+  lndsc_fit$logtiters <- log10((2^lndsc_fit$logtiters))
+  
+  return(lndsc_fit)
+}
+
 screenshot_html_landscape_to_png <- function(landscape, save_name ){
 
   to_save <- file.path(paste0(save_name, ".html"))
@@ -138,7 +148,7 @@ remove_buttons <- function(data3js){
 
 
 base_plot_data3js <- function(map, lndscp_fits, highlighted_ags, lims, ag_plot_names, alternative_ba5 = FALSE, opti_nr = 1,
-                              add_border = TRUE, add_axis = TRUE){
+                              add_border = TRUE, add_axis = TRUE, log10scale = TRUE){
   
   if(alternative_ba5){
     # set points and coordinates of highlighted ags
@@ -166,14 +176,22 @@ base_plot_data3js <- function(map, lndscp_fits, highlighted_ags, lims, ag_plot_n
   
   border_col <- "grey50"
   
-  z_lims <- c(0,12)
-  axis_at <- seq(z_lims[1], z_lims[2],2)
+  if(log10scale){
+    z_lims <- c(0,4)
+    axis_at <- seq(z_lims[1], z_lims[2],1)
+    axis_labels <- paste0("10^", axis_at+1)
+  } else {
+    z_lims <- c(0,12)
+    axis_at <- seq(z_lims[1], z_lims[2],2)
+    axis_labels <- 2^axis_at*10
+  }
+  
   # Setup plot
   data3js <- ablandscapes:::lndscp3d_setup(
     xlim = lims$xlim,
     ylim = lims$ylim,
     zlim = z_lims,
-    aspect.z = 0.5,
+    aspect.z = 1.4,
     options = list(
       lwd.grid =  0.05,
       sidegrid.lwd = 1,
@@ -186,8 +204,6 @@ base_plot_data3js <- function(map, lndscp_fits, highlighted_ags, lims, ag_plot_n
   
   if(add_axis){
 
-    axis_labels <- 2^axis_at*10
-    
     data3js <- r3js::axis3js(
       data3js,
       side = "z",
@@ -254,7 +270,8 @@ base_plot_data3js <- function(map, lndscp_fits, highlighted_ags, lims, ag_plot_n
 
 
 plot_landscapes_from_list <- function(data3js, titertables_groups, lndscp_fits,map, gmt_data, highlighted_ags,
-                                      ag_plot_names, alternative_ba5 = FALSE, opti_nr = 1, hide_buttons = TRUE){
+                                      ag_plot_names, alternative_ba5 = FALSE, opti_nr = 1, hide_buttons = TRUE,
+                                      log10scale = TRUE){
   
   if(alternative_ba5){
     x_coords <- c(agCoords(map)[agNames(map) %in% highlighted_ags, 1], agCoords(map, optimization_number = opti_nr)[agNames(map) %in% "BA.4/BA.5", 1])
@@ -305,7 +322,11 @@ plot_landscapes_from_list <- function(data3js, titertables_groups, lndscp_fits,m
     } # next
     
     gmts <- gmts[match(rownames(coords), gmts$variant),]
-    
+
+    if(log10scale){
+      gmts$gmt <- log10((2^gmts$gmt*10)/10)      
+    }
+   
     for (j in seq_len(nrow(coords))) {
       
       data3js <- r3js::lines3js(
@@ -383,6 +404,12 @@ plot_landscapes_from_list <- function(data3js, titertables_groups, lndscp_fits,m
     data3js <- remove_buttons(data3js)
   }
  
+  if(log10scale){
+    data3js$plot <- sapply(data3js$plot, function(x){
+          x$z <- log10(2^x$z)
+          x
+        })
+  }
   
   
   return(data3js)

@@ -73,16 +73,36 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
                           color_by = "sr_group", shape_by = "inf_code", line_by = "age_code", x_position_by = "age_code",
                           cols_to_keep = c("arm_code", "age_code", "inf_code"), to_long = T, 
                           show_gmt_label = F, show_group_count = F, show_mean_line = F, mean_line_color = "black",
-                          gmt_grid_row = "v_manuf_code", gmt_grid_col = "arm_code", dodge_group = "visit_code", pre_titer_adj = FALSE) {
+                          gmt_grid_row = "v_manuf_code", gmt_grid_col = "arm_code", dodge_group = "visit_code", pre_titer_adj = FALSE,
+                          log10scale = TRUE) {
   
   ag_order <- ag_order[antigens]
   # format titer to longer
   if(to_long){
-    data %>%
+
+    if(log10scale){
+      data %>%
       pivot_longer(cols = antigens, names_to = "ag_name", values_to = "titer") %>%
       mutate(logtiter = log2(titer/10),
              logtiter = ifelse(titer < titer_thresh, log2((titer_thresh/20)), logtiter)) -> data_long
+    } else {
+      data %>%
+      pivot_longer(cols = antigens, names_to = "ag_name", values_to = "titer") %>%
+      mutate(logtiter = log10(titer/10),
+             logtiter = ifelse(titer < titer_thresh, log10((titer_thresh/20)), logtiter)) -> data_long
+    }
+    
   } else{
+
+    if(log10scale){
+      data$logtiter <- log10(data$titer/10)
+
+      if("gmt_arm" %in% colnames(data)){
+        data$gmt_arm <- log10(2^data$gmt_arm)
+      }
+    }
+
+
     data_long <- data 
   }
   
@@ -94,6 +114,9 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
     if(color_by == "lab_code"){
     plot_colors <- c("Monogram" = "#ed94a7", "Montefiori" = "#6C992E", "Adjusted" = "#bb94f1",
       "Monogram-PNEUT50" = "#ed94a7", "Monogram-PNEUT80" = "#ed94a7", "Montefiori-PNEUT50" = "#6C992E", "Montefiori-PNEUT80" = "#9bd748")
+    } else if(color_by == "visit_code"){
+      plot_colors <- sr_group_colors$Color
+      names(plot_colors) <- rownames(sr_group_colors)
     } else {
 
       plot_colors <- unlist(lapply(sr_groups, function(x) {
@@ -119,8 +142,6 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
       names(plot_colors)<- rownames(sr_group_colors)
 
   }
-
-  
   
   # plot_colors <-  plot_colors[as.character(unique(data_long[, color_by]))]
   
@@ -133,8 +154,7 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
   #  max_y <- max(ceiling(data_long$logtiter), na.rm = T) +0.5
   max_y <- 15
   
-  
-  sr_group_gmt_plotdata <- sr_group_gmt_calc(data_long, titer_thresh, cols_to_keep = cols_to_keep, pre_adj = pre_titer_adj) %>%
+  sr_group_gmt_plotdata <- sr_group_gmt_calc(data_long, titer_thresh, cols_to_keep = cols_to_keep, pre_adj = pre_titer_adj, log10scale = log10scale) %>%
     filter(!all_below_thresh) %>%
     calculate_fold_change_from_ag() %>%
     mutate(y = max_y,
@@ -181,7 +201,7 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
   
   data_long$visit_code <- factor(data_long$visit_code, levels = visit_code_order)
   sr_group_gmt_plotdata$visit_code <- factor(sr_group_gmt_plotdata$visit_code, levels = visit_code_order)
-  print(unique(sr_group_gmt_plotdata$visit_code))
+  
   data_long %>%
     ggplot(
       aes_string(
@@ -302,10 +322,10 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
       position = position_dodge(width =0.4)
     ) +
     geom_point(
-      size = 2
+      size = 3
     ) +
     geom_point(
-      size = 1.5,
+      size = 2,
       fill = "white",
       shape = 21
     ) +
@@ -325,12 +345,15 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
       fill = "white",
       shape = 21
     ) +
-    scale_color_manual(values = plot_colors) +
+    scale_color_manual(values = plot_colors, name = "") +
     scale_fill_manual(values = plot_colors) +
     scale_linetype_manual(values= line_vals) +
     guides(linetype="none") + 
     scale_y_titer(
-      ymin = log2(titer_thresh/10)
+      threshold = "<40",
+      logthreshol = ifelse(log10scale, log10(titer_thresh/10), log(titer_thresh/10)),
+      ymin = ifelse(log10scale, log10(titer_thresh/10), log(titer_thresh/10)),
+      log10scale = log10scale
     ) + 
     scale_x_continuous(
       breaks = ag_order,
@@ -339,7 +362,7 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
       name = "Antigen variant"
     ) + 
     coord_cartesian(
-      ylim = shrinkrange(c(-0.5, max_y+0.5), 0.05)
+      ylim = shrinkrange(c(-0.5, ifelse(log10scale,4,max_y+0.5)), 0.05)
     ) +
     titerplot_theme() + 
     theme(
@@ -357,12 +380,11 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
       xmin = -Inf,
       xmax = Inf,
       ymin = -1,
-      ymax = log2(titer_thresh/10),
+      ymax = ifelse(log10scale, log10(titer_thresh/10), log2(titer_thresh/10)),
       fill = "grey50",
       color = NA,
       alpha = 0.3
     ) -> gp_gmt
-  
   
   if(length(unique(sr_group_gmt_plotdata$v_manuf_code)) > 1 | gmt_grid_row != "v_manuf_code"){
     gp <- gp + 
@@ -389,21 +411,31 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
       target_visit <- visits[visits != "D15"]
       
       count_label <- count_label[grepl(target_visit[1], count_label$sr_group),]
+      
     }
-    
-    count_label <- count_label %>%
+   
+    if(length(color_by) == 1 & color_by == "visit_code"){
+      count_label <- count_label %>%
+      group_by(sr_group,arm_code, v_manuf_code, age_code, visit_code) %>%
+      summarize(total_count = sum(count),
+                label = paste0("n (", age_code, ") = ", total_count),
+                x = x,
+                y = ifelse(age_code == "combined", y, ifelse(age_code == "<65", y - 1, y-2)),
+                inf_code = inf_code)
+    } else {
+      count_label <- count_label %>%
       group_by(sr_group,arm_code, v_manuf_code, age_code) %>%
       summarize(total_count = sum(count),
                 label = paste0("n (", age_code, ") = ", total_count),
                 x = x,
                 y = ifelse(age_code == "combined", y, ifelse(age_code == "<65", y - 1, y-2)),
                 inf_code = inf_code)
+    }
     
     count_label <- count_label %>%
       mutate(y = ifelse(inf_code == "inf", y-0.5, y-1))
     
     count_label$label <- gsub("\\(combined\\)", "", count_label$label)
-    
     
     #  count_label <- count_label[!duplicated(count_label$arm_code),]
     
@@ -437,13 +469,23 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
       count_label <- count_label[grepl(target_visit[1], count_label$sr_group),]
     }
     
-    count_label <- count_label %>%
+    if(length(color_by) == 1 & color_by == "visit_code"){
+      count_label <- count_label %>%
+      group_by(sr_group, arm_code, age_code, visit_code) %>%
+      summarize(total_count = sum(count),
+                label = paste0("n (", age_code, ") = ", total_count),
+                x = x,
+                y = ifelse(age_code == "combined", y, ifelse(age_code == "<65", y - 1, y-2)),
+                inf_code = inf_code)
+    } else {
+      count_label <- count_label %>%
       group_by(sr_group, arm_code, age_code) %>%
       summarize(total_count = sum(count),
                 label = paste0("n (", age_code, ") = ", total_count),
                 x = x,
                 y = ifelse(age_code == "combined", y, ifelse(age_code == "<65", y - 1, y-2)),
                 inf_code = inf_code)
+    }
     
     count_label <- count_label %>%
       mutate(y = ifelse(inf_code == "inf", y, y-1))
@@ -473,11 +515,20 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
   }
   
   if(show_group_count){
-    
+
+    unique_visits <- unique(count_label$visit_code)
+    if(length(unique_visits) > 1){
+      
+      unique_visits <- as.numeric(gsub("D", "", unique_visits))
+
+      count_label <- count_label %>%
+        filter(visit_code == paste0("D", min(unique_visits)))
+    }
+
     gp_gmt <- gp_gmt +
       geom_text(data = count_label,
                 #mapping = aes(x = ag_order[ag_name], y = ifelse(age_code == "<65", y, y-1.5), label = label),
-                mapping = aes(x = x, y = y+0.5, label = label, hjust = 1),
+                mapping = aes(x = x, y = ifelse(log10scale, log10(2^(y+0.5)), y+0.5), label = label, hjust = 1),
                 color = "black",
                 size = 4
       )

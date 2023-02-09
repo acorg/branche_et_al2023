@@ -22,7 +22,7 @@ exclude_2dose <- TRUE
 date <- "14DEC2022"
 day <- "91"
 
-inf_names <- c("inf" = "inf", non_inf = "non_inf")
+inf_names <- c(non_inf = "non_inf", inf = "inf")
 
 #set day, visit numbers
 day_visno <- c("D1", "D91")
@@ -193,6 +193,7 @@ lndscp_fits <- lapply(
   }
 )
 
+
 titertables_groups <- group_data(titerdata)
 
 # Add impulses
@@ -205,15 +206,15 @@ titerdata %>%
   ) %>%
   summarize(gmt =meantiter::mean_titers(titer, method ="bayesian", dilution_stepsize = 0)$mean)-> gmt_data
 
-
 # angle for html page
 angle <- list(
-  rotation = c(-1.4907, -0.0089, -0.1502),
+  rotation = c(-1.5335, -0.0093, -0.171),
   translation = c(0, 0,0), #translation = c(0.0344, 0.0459, 0.1175),
   zoom = 1.45
 )
 
 data3js <- base_plot_data3js(map, lndscp_fits, highlighted_ags, lims, ag_plot_names)
+
 for(v_manuf in unique(titertables_groups$v_manuf_code)){
   
   for(v1 in day_visno){
@@ -239,12 +240,12 @@ for(v_manuf in unique(titertables_groups$v_manuf_code)){
         titertables_groups_t <- titertables_groups[intersect(manuf_rows, visit_rows),]
         
         lndscp_3js <- plot_landscapes_from_list(data3js, titertables_groups_t, lndscp_fits_t, map, gmt_data, highlighted_ags, ag_plot_names)
-        
         lndscp <-r3js(
           lndscp_3js,
           rotation = angle$rotation,
           zoom = angle$zoom
         )
+        
         save_name <- file.path(figure_dir,paste0(v1, "_", v2, "_", v_manuf, "_gmt_landscapes"))
         screenshot_html_landscape_to_png(lndscp, save_name)
        # p <- plot_single_landscape_panel(lndscp, label = "", save_name = save_name, delete_html = FALSE)
@@ -256,7 +257,6 @@ for(v_manuf in unique(titertables_groups$v_manuf_code)){
   }
   
 }
-
 
 
 if(!only_gmt_landscapes){
@@ -292,7 +292,6 @@ if(!only_gmt_landscapes){
               titertables_groups_t <- titertables_groups_temp[arm_rows,]
               
               data3js <- base_plot_data3js(map, lndscp_fits, highlighted_ags, lims, ag_plot_names)
-              
               lndscp_3js <- plot_landscapes_from_list(data3js, titertables_groups_t, lndscp_fits_t, map, gmt_data, highlighted_ags, ag_plot_names)
               
               x <-r3js(

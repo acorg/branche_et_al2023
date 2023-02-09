@@ -32,7 +32,8 @@ NA-D+O-NA-NA-NA-NA-NA;#d18652
 B+O, B+O;blue
 B+O;blue
 P+O;#9BF580
-P;red
+# P;red
+P;#ffb3b3
 O;black
 D+O;green
 B;#e7ba52
@@ -66,10 +67,10 @@ P+B:S;#9010C6
 M;#ef929d
 Pf;#393b79
 S;#8fce00
-D1;#6e6e6e
+## D1-OLD;#6e6e6e
 D15;#c6c6c6
 D57;#c6c6c6
-# D91;#dcdcdc
+D91;#6e6e6e
 D85;#dcdcdc
 D91 - D1;#dcdcdc
 D91 - D29;#6e6e6e
