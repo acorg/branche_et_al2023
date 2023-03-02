@@ -148,7 +148,7 @@ for(d_adj in BO_D_ajudstment){
                                  facet_n_row = nrow_facet, sr_group_order = sr_group_order, gmt_facetter = "arm_code", color_by = c("arm_code", "visit_code"),
                                  x_position_by = "age_code", cols_to_keep = c("arm_code", "gmt_arm", "visit_code", "inf_code",
                                                                                 "age_code", "v_manuf_code"), show_group_count = TRUE,
-                                 show_mean_line = T, mean_line_color = "red", to_long = F,
+                                 show_mean_line = T, mean_line_color = sr_group_colors["P", "Color"], to_long = F,
                                  nrow_gmt = nrow_facet,
                                  dodge_group = "visit_code")$gmt + theme(legend.position = "none")
 
@@ -167,15 +167,21 @@ for(d_adj in BO_D_ajudstment){
           
           sr_group_colors_day <-read.csv("./data/metadata/sr_group_colors_day.csv", sep = ";", row.names = "Serum.group")
     
+          sr_group_colors_day_small <- sr_group_colors_day$Color
+          names(sr_group_colors_day_small) <- rownames(sr_group_colors_day)
           plots <- titerlineplot_dodge(sr_group_data_temp, sr_group_colors_day, titer_thresh = 40, antigens = plot_antigens,
                                  facet_n_row = nrow_facet, sr_group_order = sr_group_order, gmt_facetter = "arm_code", color_by = c("visit_code"),
                                  x_position_by = "age_code", cols_to_keep = c("arm_code", "gmt_arm", "visit_code", "inf_code",
                                                                                 "age_code", "v_manuf_code"), show_group_count = TRUE,
-                                 show_mean_line = FALSE, mean_line_color = "red", to_long = F,
+                                 show_mean_line = FALSE, to_long = F,
                                  nrow_gmt = nrow_facet,
-                                 dodge_group = "visit_code")$gmt +
+                                 dodge_group = "visit_code",
+                                 show_lines = FALSE)$gmt +
+                                 scale_fill_manual(values = sr_group_colors_day_small) + 
                                  guides(shape="none",
-                                 fill = "none") +
+                                  fill = "none") +
+                                 scale_color_manual(values = sr_group_colors_day_small,
+                                    name = "", breaks = c("D1", "D29", "D91")) + 
                                 theme(legend.position = c(.95, .9)) 
 
           ggsave(file.path(figure_dir, paste0(inf_stat, "_D1_D29_D91_gmts_age_all_by_arm_colour_visit.png")), plot = plots, dpi = 300, width =plot_width, height = 2+2*nrow_facet)

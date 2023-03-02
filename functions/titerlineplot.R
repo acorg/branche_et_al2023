@@ -74,7 +74,7 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
                           cols_to_keep = c("arm_code", "age_code", "inf_code"), to_long = T, 
                           show_gmt_label = F, show_group_count = F, show_mean_line = F, mean_line_color = "black",
                           gmt_grid_row = "v_manuf_code", gmt_grid_col = "arm_code", dodge_group = "visit_code", pre_titer_adj = FALSE,
-                          log10scale = TRUE) {
+                          log10scale = TRUE, show_lines = TRUE) {
   
   ag_order <- ag_order[antigens]
   # format titer to longer
@@ -302,26 +302,14 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
         fill = color_by,
         shape = shape_by
       )
-    ) + 
-    geom_line(
+    ) -> gp_gmt
+
+  if(show_lines){
+    gp_gmt + geom_line(
       aes_string(group = "sr_group",
                  linetype = line_by),
       size = 1
-    ) +
-    # pointrange if I want them dodged, x position by. If I just want it dodged then I can add position = position_dodge(width = 1)
-    # geom_pointrange(
-    #   aes(ymin = lower,
-    #       ymax = upper)
-    # ) +
-    # errorbar if I want shifted bars
-    geom_errorbar(
-      aes_string(ymin = "lower",
-          ymax = "upper",
-          group = dodge_group), # usually visit code
-      width = 0,
-      position = position_dodge(width =0.4)
-    ) +
-    geom_point(
+    ) + geom_point(
       size = 3
     ) +
     geom_point(
@@ -345,9 +333,23 @@ titerlineplot_dodge <- function(data, sr_group_colors, titer_thresh = 13, antige
       fill = "white",
       shape = 21
     ) +
+    scale_linetype_manual(values= line_vals) -> gp_gmt
+
+  } else {
+     gp_gmt + geom_point(
+      size = 3
+    ) -> gp_gmt
+  }
+    
+    gp_gmt + geom_errorbar(
+      aes_string(ymin = "lower",
+          ymax = "upper",
+          group = dodge_group), # usually visit code
+      width = 0,
+      position = position_dodge(width =0.4)
+    ) +
     scale_color_manual(values = plot_colors, name = "") +
     scale_fill_manual(values = plot_colors) +
-    scale_linetype_manual(values= line_vals) +
     guides(linetype="none") + 
     scale_y_titer(
       threshold = "<40",

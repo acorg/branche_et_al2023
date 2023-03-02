@@ -38,7 +38,9 @@ ag_plot_names <- c("D614G" = "D614G", "B.1.617.2" = "Delta", "B.1.351" = "Beta",
 
 
 sr_group_code <- read.csv("./data/metadata/sr_group_code.csv", sep = ";")
-sr_group_colors <- read.csv("./data/metadata/sr_group_colors_emmes.csv", sep = ";", row.names = "Serum.group")
+sr_group_colors <- read.csv("./data/metadata/sr_group_colors.csv", sep = ";", row.names = "Serum.group")
+sr_group_colors["B+O", "Color"] <- sr_group_colors["B", "Color"]
+sr_group_colors["B+O:M", "Color"] <- sr_group_colors["B:Pf", "Color"]
 
 # map <- read.acmap("./data/maps/hacked_monte_map_w_2xBetaVax_3xVax.ace")
 # below is v1 map for day1, day 15
@@ -48,12 +50,18 @@ sr_group_colors <- read.csv("./data/metadata/sr_group_colors_emmes.csv", sep = "
 
 # this map is the one without the new delta sera, October 20202
 map <- read.acmap(file.path("data", "maps", "map_ndsubset_no_outliers_slope_adjusted.ace"))
-agShown(map)[agNames(map) %in% c("BA.1.1", "BA.1+A484K","BA.3")] <- FALSE
+agShown(map)[agNames(map) %in% c("BA.1.1", "BA.1+A484K","BA.3", "BA.2.12.1")] <- FALSE
 #align pre submission map
 map <- realignMap(map, map)
 
 map <- keepSingleOptimization(map, optimization_number = opti_nr)
 lims <- Racmacs:::mapPlotLims(map, sera = FALSE)
+
+png("figures/base_map.png", 6, 5, units = 'in', res=300, pointsize = 12)
+par(mar = rep(0.5, 4))
+plot(map, xlim = lims$xlim, ylim = lims$ylim)
+dev.off()
+
 # adjust limits for pre resubmission map
 lims$xlim[2] <- lims$xlim[2] + 1
 lims$ylim[1] <- lims$ylim[1] + 1

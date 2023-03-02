@@ -1,8 +1,8 @@
 # function to format csv data, to add sr group and sr name
 day_visno_code <- read.csv(file.path("data", "metadata", "visno_study_day.csv"), sep =";")
 sr_group_code <- read.csv("./data/metadata/sr_group_code.csv", sep = ";")
-sr_group_colors <- read.csv("./data/metadata/sr_group_colors_emmes.csv", sep = ";", row.names = "Serum.group")
-
+#sr_group_colors <- read.csv("./data/metadata/sr_group_colors_emmes.csv", sep = ";", row.names = "Serum.group")
+sr_group_colors <- read.csv("./data/metadata/sr_group_colors.csv", sep = ";", row.names = "Serum.group")
 
 format_data <- function(data, sr_group_code, lab = "Monogram", combine_b_o_arm = T, 
   remove_all_bfl = TRUE, remove_all_subj_entries = TRUE){
