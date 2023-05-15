@@ -37,16 +37,9 @@ opti_nr <- 1
 ag_plot_names <- c("D614G" = "D614G", "B.1.617.2" = "Delta", "B.1.351" = "Beta", "BA.1" = "BA.1", "BA.2.12.1" = "BA.2.12.1", "BA.4/BA.5" = "BA.4/BA.5")
 
 
-sr_group_code <- read.csv("./data/metadata/sr_group_code.csv", sep = ";")
+path_to_data <- file.path("data", "metadata")
+sr_group_code <- read.csv(file.path(path_to_data, "sr_group_code.csv"), sep = ";")
 sr_group_colors <- read.csv("./data/metadata/sr_group_colors.csv", sep = ";", row.names = "Serum.group")
-sr_group_colors["B+O", "Color"] <- sr_group_colors["B", "Color"]
-sr_group_colors["B+O:M", "Color"] <- sr_group_colors["B:Pf", "Color"]
-
-# map <- read.acmap("./data/maps/hacked_monte_map_w_2xBetaVax_3xVax.ace")
-# below is v1 map for day1, day 15
-# map <- read.acmap("./data/maps/pub_monte_map_w_2xBetaVax_3xVax_omi.ace")
-# this is newest montefiori map
-# map <- read.acmap(file.path("data", "maps", "map_ndsubset_no_outliers.ace"))
 
 # this map is the one without the new delta sera, October 20202
 map <- read.acmap(file.path("data", "maps", "map_ndsubset_no_outliers_slope_adjusted.ace"))
@@ -247,7 +240,8 @@ for(v_manuf in unique(titertables_groups$v_manuf_code)){
         lndscp_fits_t <- lndscp_fits[intersect(manuf_rows, visit_rows)]
         titertables_groups_t <- titertables_groups[intersect(manuf_rows, visit_rows),]
         
-        lndscp_3js <- plot_landscapes_from_list(data3js, titertables_groups_t, lndscp_fits_t, map, gmt_data, highlighted_ags, ag_plot_names)
+        lndscp_3js <- plot_landscapes_from_list(data3js, titertables_groups_t, lndscp_fits_t, map, gmt_data, highlighted_ags, ag_plot_names,
+                                                arm_cols = arm_cols)
         lndscp <-r3js(
           lndscp_3js,
           rotation = angle$rotation,
@@ -300,7 +294,8 @@ if(!only_gmt_landscapes){
               titertables_groups_t <- titertables_groups_temp[arm_rows,]
               
               data3js <- base_plot_data3js(map, lndscp_fits, highlighted_ags, lims, ag_plot_names)
-              lndscp_3js <- plot_landscapes_from_list(data3js, titertables_groups_t, lndscp_fits_t, map, gmt_data, highlighted_ags, ag_plot_names)
+              lndscp_3js <- plot_landscapes_from_list(data3js, titertables_groups_t, lndscp_fits_t, map, gmt_data, highlighted_ags, ag_plot_names,
+                                                      arm_cols = arm_cols)
               
               x <-r3js(
                 lndscp_3js,

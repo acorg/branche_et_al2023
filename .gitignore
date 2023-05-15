@@ -5,3 +5,4 @@ data/maps/*
 figures/14DEC2022/landscape*
 
 .DS_Store
+.Rproj.user

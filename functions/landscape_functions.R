@@ -191,7 +191,7 @@ base_plot_data3js <- function(map, lndscp_fits, highlighted_ags, lims, ag_plot_n
     xlim = lims$xlim,
     ylim = lims$ylim,
     zlim = z_lims,
-    aspect.z = 1.4,
+    aspect.z = 1.6, # 1.4,
     options = list(
       lwd.grid =  0.05,
       sidegrid.lwd = 1,
@@ -270,7 +270,7 @@ base_plot_data3js <- function(map, lndscp_fits, highlighted_ags, lims, ag_plot_n
 
 
 plot_landscapes_from_list <- function(data3js, titertables_groups, lndscp_fits,map, gmt_data, highlighted_ags,
-                                      ag_plot_names, alternative_ba5 = FALSE, opti_nr = 1, hide_buttons = TRUE,
+                                      ag_plot_names,arm_cols, alternative_ba5 = FALSE, opti_nr = 1, hide_buttons = TRUE,
                                       log10scale = TRUE){
   
   if(alternative_ba5){
