@@ -191,7 +191,7 @@ base_plot_data3js <- function(map, lndscp_fits, highlighted_ags, lims, ag_plot_n
     xlim = lims$xlim,
     ylim = lims$ylim,
     zlim = z_lims,
-    aspect.z = 1.6, # 1.4,
+    aspect.z = 2, # 1.4,
     options = list(
       lwd.grid =  0.05,
       sidegrid.lwd = 1,

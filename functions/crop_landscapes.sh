@@ -17,7 +17,7 @@ echo "Cropping landscapes"
 
 for f in $PNG_LIST; do
  #   convert ${f} -crop 2200x1200+500+600 ${f}
-    convert ${f} -gravity center -crop 2000x1100-130+150 ${f}
+    convert ${f} -gravity center -crop 2000x1350-130+150 ${f}
 done
 
 

@@ -137,6 +137,7 @@ highlighted_ags <- gsub("BA.4/5", "BA.4/BA.5", highlighted_ags)
 
 
 color_schemes <- list.files(path_to_data, pattern = "_scheme_")
+color_schemes <- color_schemes[grep("emmes", color_schemes)]
 
 sr_group_data_b <- sr_group_data
 

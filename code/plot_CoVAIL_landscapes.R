@@ -39,7 +39,7 @@ ag_plot_names <- c("D614G" = "D614G", "B.1.617.2" = "Delta", "B.1.351" = "Beta",
 
 path_to_data <- file.path("data", "metadata")
 sr_group_code <- read.csv(file.path(path_to_data, "sr_group_code.csv"), sep = ";")
-sr_group_colors <- read.csv("./data/metadata/sr_group_colors.csv", sep = ";", row.names = "Serum.group")
+sr_group_colors <- read.csv("./data/metadata/colour_scheme_emmes.csv", sep = ";", row.names = "Serum.group")
 
 # this map is the one without the new delta sera, October 20202
 map <- read.acmap(file.path("data", "maps", "map_ndsubset_no_outliers_slope_adjusted.ace"))
@@ -209,7 +209,7 @@ titerdata %>%
 
 # angle for html page
 angle <- list(
-  rotation = c(-1.5335, -0.0093, -0.171),
+  rotation = c(-1.5, -0.0093, -0.171), #rotation = c(-1.5335, -0.0093, -0.171),
   translation = c(0, 0,0), #translation = c(0.0344, 0.0459, 0.1175),
   zoom = 1.45
 )
