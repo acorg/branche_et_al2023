@@ -47,10 +47,15 @@ agShown(map)[agNames(map) %in% c("BA.1.1", "BA.1+A484K","BA.3", "BA.2.12.1")] <-
 #align pre submission map
 map <- realignMap(map, map)
 
+
 map <- keepSingleOptimization(map, optimization_number = opti_nr)
 lims <- Racmacs:::mapPlotLims(map, sera = FALSE)
 
-png("figures/base_map.png", 6, 5, units = 'in', res=300, pointsize = 12)
+#---------- Check for revision comments
+srOutline(map)[srGroups(map) %in% c("2x mRNA-1273 new", "3x mRNA-1273", "3x mRNA-1273 BD01", "3x mRNA-1273 BD29", "3x mRNA-1273 (6 month)")] <- "grey30"
+srSize(map)[srGroups(map) %in% c("2x mRNA-1273 new", "3x mRNA-1273", "3x mRNA-1273 BD01", "3x mRNA-1273 BD29", "3x mRNA-1273 (6 month)")] <- 5
+#-----------------------------
+png("figures/base_map_dark.png", 6, 5, units = 'in', res=300, pointsize = 12)
 par(mar = rep(0.5, 4))
 plot(map, xlim = lims$xlim, ylim = lims$ylim)
 dev.off()

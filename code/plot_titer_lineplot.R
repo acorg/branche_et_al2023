@@ -148,7 +148,8 @@ for(d_adj in BO_D_ajudstment){
                                  facet_n_row = nrow_facet, sr_group_order = sr_group_order, gmt_facetter = "arm_code", color_by = c("arm_code", "visit_code"),
                                  x_position_by = "age_code", cols_to_keep = c("arm_code", "gmt_arm", "visit_code", "inf_code",
                                                                                 "age_code", "v_manuf_code"), show_group_count = TRUE,
-                                 show_mean_line = T, mean_line_color = sr_group_colors["P", "Color"], to_long = F,
+                                 show_mean_line = T, mean_line_color = "red",# sr_group_colors["P", "Color"], 
+                                 to_long = F,
                                  nrow_gmt = nrow_facet,
                                  dodge_group = "visit_code")$gmt + theme(legend.position = "none")
 
