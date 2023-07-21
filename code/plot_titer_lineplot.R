@@ -116,7 +116,7 @@ for(d_adj in BO_D_ajudstment){
     sr_group_colors["D1", "Color"] <- NA
     sr_group_colors["D29", "Color"] <- NA
     # do above but show p -arm
-    for(v1 in day_visno){
+    for(v1 in c("D1")){
       
       sr_group_order <- unique(c(sr_groups[grepl(v1, sr_groups)]))
       
@@ -126,9 +126,9 @@ for(d_adj in BO_D_ajudstment){
       
       plot_width <- 0.5+2*unique_arms
       
-      
+      plot_list <- list()
       if(v1 != last(day_visno)){
-        for(v2 in day_visno[c((grep(v1, day_visno)+1):length(day_visno))]) {
+        for(v2 in c("D29", "D91")) {
           
           
           sr_group_data_temp <- sr_group_data_long %>%
@@ -148,16 +148,22 @@ for(d_adj in BO_D_ajudstment){
                                  facet_n_row = nrow_facet, sr_group_order = sr_group_order, gmt_facetter = "arm_code", color_by = c("arm_code", "visit_code"),
                                  x_position_by = "age_code", cols_to_keep = c("arm_code", "gmt_arm", "visit_code", "inf_code",
                                                                                 "age_code", "v_manuf_code"), show_group_count = TRUE,
-                                 show_mean_line = T, mean_line_color = "red",# sr_group_colors["P", "Color"], 
+                                 show_mean_line = T, mean_line_color = sr_group_colors["P", "Color"], 
                                  to_long = F,
                                  nrow_gmt = nrow_facet,
                                  dodge_group = "visit_code")$gmt + theme(legend.position = "none")
 
           ggsave(file.path(figure_dir, paste0(inf_stat, "_", v1, "_", v2, "_gmts_age_all_by_arm_show_p_arm.png")), plot = plots, dpi = 300, width =plot_width, height = 2+2*nrow_facet)
+          ggsave(file.path(figure_dir, paste0(inf_stat, "_", v1, "_", v2, "_gmts_age_all_by_arm_show_p_arm.pdf")), plot = plots, dpi = 300, width =plot_width, height = 2+2*nrow_facet)
           
+          plot_list[[v2]] <- plots
           
         }
 
+        patchwork <- plot_list[[1]] / plot_list[[2]] + plot_annotation(tag_levels = 'A')  & 
+          theme(plot.tag = element_text(size = 20))
+        ggsave(file.path(figure_dir, paste0(inf_stat,  "_gmts_age_all_by_arm_show_p_arm.pdf")), plot = patchwork, dpi = 300, width =plot_width, height = 2*(2+2*nrow_facet))
+        
         # do all three visits combined
         sr_group_data_temp <- sr_group_data_long %>%
             filter(visit_code %in% c("D1", "D29", "D91"))
@@ -186,6 +192,7 @@ for(d_adj in BO_D_ajudstment){
                                 theme(legend.position = c(.95, .9)) 
 
           ggsave(file.path(figure_dir, paste0(inf_stat, "_D1_D29_D91_gmts_age_all_by_arm_colour_visit.png")), plot = plots, dpi = 300, width =plot_width, height = 2+2*nrow_facet)
+          ggsave(file.path(figure_dir, paste0(inf_stat, "_D1_D29_D91_gmts_age_all_by_arm_colour_visit.pdf")), plot = plots, dpi = 300, width =plot_width, height = 2+2*nrow_facet)
           
         
         
